@@ -87,6 +87,21 @@ vect2& vect2::operator--(void){
 	return *this;
 }
 
+bool vect2::operator==(vect2 const &ref){
+	return (_first == ref._first && _second == ref._second);
+}
+
+bool vect2::operator!=(vect2 const &ref){
+	return !(_first == ref._first && _second == ref._second);
+}
+
+vect2	vect2::operator+=(vect2 const & ref){
+	return (*this + ref);
+}
+
+vect2	vect2::operator-=(vect2 const & ref){
+	return (*this + ref);
+}
 
 std::ostream& operator<<(std::ostream &os, vect2 const &ref){
 	os << "{" << ref.getFirst() << ", " << ref.getSecond() << "}" << std::endl;

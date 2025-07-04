@@ -24,6 +24,7 @@ int main(){
 	std::cout << "-v2 = " << -v2 << std::endl;
 
 	std::cout << "++v2 = "<< ++v2 << "v2++ = " << v2++ << std::endl;
-	v2--;
 	std::cout << "--v2 = "<< --v2 << "v2-- = " << v2-- << std::endl;
+
+	std::cout << "v2 += v2 = " << (v2 += v2) << std::endl;
 }
