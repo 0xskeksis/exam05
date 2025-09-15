@@ -1,54 +1,8 @@
 #include "game.h"
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-bool
-process_char(t_game *game, char c){
-	static int x = 0;
-	static int y = 0;
-
-
-	if (c == '\n')
-		return false;
-	switch (c){
-		case 'x':{
-			game->writing = !game->writing;
-			if (game->writing)
-				game->board[y][x] = true;
-			return true;
-		}
-		case 'w':{if (y > 0) y--; break;}
-		case 's':{if (y < game->height) y++; break;}
-		case 'a':{if (x > 0) x--; break;}
-		case 'd':{if (x < game->width) x++; break;}
-	}
-	if (game->writing)
-		game->board[y][x] = true;
-	return true;
-}
-
-bool
-read_input(t_game *game){
-	char	c;
-
-	while (read(STDIN_FILENO, &c, 1) > 0){
-		if (!process_char(game, c))
-			return true;
-	}
-	return true;
-}
-
-void
-init_board(t_game *game){
-	game->board = calloc(sizeof(bool *), game->height);
-	for (int i =0; i < game->height; i++){
-		game->board[i] = calloc(sizeof(bool), game->width);
-	}
-}
-
-bool
-get_args(t_game *game, char **argv){
+bool	get_args(t_game *game, char **argv){
 	game->width = atoi(argv[1]);
 	game->height = atoi(argv[2]);
 	game->iterations = atoi(argv[3]);
@@ -58,11 +12,35 @@ get_args(t_game *game, char **argv){
 	return true;
 }
 
-void
-print_board(t_game *game){
-	for (int i = 0; i < game->height; i++){
-		for (int j = 0; j < game->width; j++){
-			if (game->board[i][j] == true)
+void	process_input(t_game *game){
+	char	c;
+	int		x = 0;
+	int		y = 0;
+
+	while (read(STDIN_FILENO, &c, 1) > 0){
+		switch(c){
+			case '\n': return;
+			case 'x': {
+				game->writing = !game->writing;
+				if (game->writing)
+					game->board[y][x] = true;
+				continue;
+			}
+			case 'w': {if (y > 0) y--; break;}
+			case 's': {if (y < game->height - 1) y++; break;}
+			case 'a': {if (x > 0) x--; break;}
+			case 'd': {if (x < game->width - 1) x++; break;}
+		}
+		if (game->writing)
+			game->board[y][x] = true;
+	}
+	return ;
+}
+
+void	print_board(int width, int height, bool **board){
+	for (int i = 0; i < height; i++){
+		for (int j = 0; j < width; j++){
+			if (board[i][j])
 				putchar(ALIVE);
 			else
 				putchar(DEAD);
@@ -71,11 +49,17 @@ print_board(t_game *game){
 	}
 }
 
+bool **init_board(int width, int height){
+    bool **board = calloc(height, sizeof(bool *));
+    for (int i = 0; i < height; i++)
+        board[i] = calloc(width, sizeof(bool));
+    return board;
+}
+
 void
-free_board(t_game *game, bool **board){
-	for (int i = 0; i < game->height; i++){
+free_board(int width, int height, bool **board){
+	for (int i = 0; i < height; i++)
 		free(board[i]);
-	}
 	free(board);
 }
 
@@ -101,45 +85,35 @@ count_neighbours(bool **board, int x, int y, int width, int height){
     return count;
 }
 
-void
-solve_game(t_game *game){
-	bool **new_board;
+bool
+**solve_game(int width, int height, bool **board){
+	bool **new_board = init_board(width, height);
 
-	new_board = malloc(sizeof(bool *) * (game->height));
-	for (int i = 0; i < game->height; i++)
-		new_board[i] = malloc(sizeof(bool) * game->width);
-
-	for (int i = 0; i < game->height; i++){
-		for (int j = 0; j < game->width; j++){
-			int count = count_neighbours(game->board, i, j, game->width, game->height);
-			if (game->board[i][j])
+	for (int i = 0; i < height; i++){
+		for (int j = 0; j < width; j++){
+			int count = count_neighbours(board, i, j, width, height);
+			if (board[i][j])
 				new_board[i][j] = (count == 2 || count == 3);
 			else
 				new_board[i][j] = (count == 3);
 		}
 	}
-	free_board(game, game->board);
-	game->board = new_board;
+	free_board(width, height, board);
+	return new_board;
 }
 
-int	main(int argc, char **argv){
-	if (argc != 4)
-		return (1);
+int main(int argc, char **argv){
+	if (argc != 4) return 1;
 
-	t_game game = {0};
+	t_game	game = {0};
 
-	if (!get_args(&game, argv))
-		return (1);
-	init_board(&game);
-	read_input(&game);
-	if (game.iterations == 0){
-		print_board(&game);
-		free_board(&game, game.board);
-		return (0);
+	if (get_args(&game, argv) == false) return 1;
+	game.board = init_board(game.width, game.height);
+	process_input(&game);
+	for (int i = 0; i < game.iterations; i++){
+		bool **new_board = solve_game(game.width, game.height, game.board);
+		game.board = new_board;
 	}
-	for (int i = 0; i != game.iterations; i++){
-		solve_game(&game);
-	}
-	print_board(&game);
-	free_board(&game, game.board);
+	print_board(game.width, game.height, game.board);
+	free_board(game.width, game.height, game.board);
 }

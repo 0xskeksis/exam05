@@ -1,17 +1,17 @@
 #pragma once
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <unistd.h>
 
-#define DEAD ' '
 #define ALIVE 'O'
+#define DEAD ' '
 
-typedef struct	s_game{
-	bool **board;
+typedef struct s_game{
 	int	width;
 	int	height;
-	int	iterations;
+	int iterations;
+	bool	**board;
 	bool	writing;
 }t_game;
